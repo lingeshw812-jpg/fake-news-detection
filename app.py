@@ -458,3 +458,42 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 st.markdown('<p class="footer-note">Built with NLP + Machine Learning · Final Year Project</p>', unsafe_allow_html=True)
+import requests
+
+NEWS_API_KEY = "YOUR_API_KEY_HERE"  # paste your key from newsapi.org
+
+def fetch_live_headlines(country="us", category="general", count=5):
+    url = f"https://newsapi.org/v2/top-headlines?country={country}&category={category}&apiKey={NEWS_API_KEY}&pageSize={count}"
+    response = requests.get(url)
+    if response.status_code == 200:
+        data = response.json()
+        articles = data.get("articles", [])
+        return [
+            {
+                "title": a.get("title", ""),
+                "description": a.get("description", "") or "",
+                "source": a.get("source", {}).get("name", "Unknown")
+            }
+            for a in articles
+        ]
+    return []
+    st.markdown('<p class="section-title">Check Live Headlines</p>', unsafe_allow_html=True)
+
+if st.button("📡 Fetch Latest Real News", use_container_width=True):
+    with st.spinner("Fetching live headlines..."):
+        headlines = fetch_live_headlines()
+
+    if headlines:
+        for h in headlines:
+            combined_text = h["title"] + " " + h["description"]
+            label, confidence = predict_news(combined_text)
+            tag_class = "history-tag-real" if label == "REAL" else "history-tag-fake"
+            st.markdown(f"""
+                <div class="history-item">
+                    <span>{h['title']} <br><small style="color:#888;">Source: {h['source']}</small></span>
+                    <span class="{tag_class}">{label} · {confidence}%</span>
+                </div>
+            """, unsafe_allow_html=True)
+    else:
+        st.warning("Could not fetch live news. Check your API key or try again.")
+        
