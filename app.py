@@ -37,7 +37,7 @@ def predict_news(text):
     confidence = round(max(probability) * 100, 2)
     return label, confidence
 
-st.set_page_config(page_title="Fake News Detector", page_icon="📰", layout="centered")
+st.set_page_config(page_title="The News Verifier", page_icon="📰", layout="centered")
 
 st.markdown("""
     <style>
@@ -52,12 +52,17 @@ st.markdown("""
     header {visibility: hidden;}
 
     .stApp {
-        background: radial-gradient(circle at top, #1a1a1a 0%, #000000 70%);
+        background: #0a0a0c;
+        background-image:
+            radial-gradient(circle at 20% 20%, rgba(212, 175, 55, 0.08) 0%, transparent 40%),
+            radial-gradient(circle at 80% 80%, rgba(52, 211, 153, 0.06) 0%, transparent 40%),
+            radial-gradient(circle at 50% 50%, rgba(10, 10, 12, 1) 0%, #000000 100%);
+        background-attachment: fixed;
     }
 
     .main-title {
         font-family: 'Playfair Display', serif;
-        font-size: 50px;
+        font-size: 48px;
         font-weight: 800;
         background: linear-gradient(90deg, #d4af37, #f4e5c2, #d4af37);
         background-size: 200% auto;
@@ -75,31 +80,31 @@ st.markdown("""
 
     .subtitle {
         text-align: center;
-        color: #a8a8a8;
-        font-size: 15px;
-        margin-bottom: 40px;
-        font-weight: 400;
-        letter-spacing: 0.5px;
+        color: #8a8a8a;
+        font-size: 13px;
+        margin-bottom: 45px;
+        font-weight: 500;
+        letter-spacing: 2px;
         text-transform: uppercase;
     }
 
     div[data-testid="stTextArea"] textarea {
-        background-color: #141414 !important;
+        background-color: rgba(255, 255, 255, 0.03) !important;
         border-radius: 14px !important;
-        border: 1px solid #d4af37 !important;
+        border: 1px solid rgba(212, 175, 55, 0.35) !important;
         color: #f5f5f5 !important;
         font-size: 15px !important;
-        padding: 16px !important;
+        padding: 18px !important;
         caret-color: #d4af37 !important;
     }
 
     div[data-testid="stTextArea"] textarea::placeholder {
-        color: #777777 !important;
+        color: #666666 !important;
     }
 
     div[data-testid="stTextArea"] textarea:focus {
-        border: 1px solid #f4e5c2 !important;
-        box-shadow: 0 0 15px rgba(212, 175, 55, 0.3) !important;
+        border: 1px solid #d4af37 !important;
+        box-shadow: 0 0 25px rgba(212, 175, 55, 0.25) !important;
     }
 
     .stButton>button {
@@ -108,11 +113,11 @@ st.markdown("""
         color: #0a0a0a;
         border: none;
         border-radius: 12px;
-        padding: 14px 36px;
+        padding: 14px 40px;
         font-weight: 700;
-        font-size: 15px;
+        font-size: 14px;
         transition: all 0.4s ease;
-        letter-spacing: 0.5px;
+        letter-spacing: 1.5px;
         text-transform: uppercase;
     }
 
@@ -126,45 +131,114 @@ st.markdown("""
         transform: translateY(0px) scale(0.98);
     }
 
-    .result-card {
-        padding: 28px;
-        border-radius: 16px;
-        font-size: 22px;
+    /* Signal Orb */
+    .signal-wrap {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-top: 40px;
+        animation: fadeIn 0.6s ease;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(15px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .orb {
+        width: 90px;
+        height: 90px;
+        border-radius: 50%;
+        margin-bottom: 20px;
+        position: relative;
+    }
+
+    .orb-real {
+        background: radial-gradient(circle at 35% 30%, #6ee7b7, #10b981 60%, #065f46);
+        box-shadow: 0 0 20px #34d399, 0 0 50px rgba(52, 211, 153, 0.5), 0 0 90px rgba(52, 211, 153, 0.25);
+        animation: pulseGreen 1.8s infinite ease-in-out;
+    }
+
+    .orb-fake {
+        background: radial-gradient(circle at 35% 30%, #fca5a5, #ef4444 60%, #7f1d1d);
+        box-shadow: 0 0 20px #f87171, 0 0 50px rgba(248, 113, 113, 0.5), 0 0 90px rgba(248, 113, 113, 0.25);
+        animation: pulseRed 1.8s infinite ease-in-out;
+    }
+
+    @keyframes pulseGreen {
+        0%, 100% { box-shadow: 0 0 20px #34d399, 0 0 50px rgba(52, 211, 153, 0.5), 0 0 90px rgba(52, 211, 153, 0.25); }
+        50% { box-shadow: 0 0 30px #34d399, 0 0 70px rgba(52, 211, 153, 0.7), 0 0 120px rgba(52, 211, 153, 0.4); }
+    }
+
+    @keyframes pulseRed {
+        0%, 100% { box-shadow: 0 0 20px #f87171, 0 0 50px rgba(248, 113, 113, 0.5), 0 0 90px rgba(248, 113, 113, 0.25); }
+        50% { box-shadow: 0 0 30px #f87171, 0 0 70px rgba(248, 113, 113, 0.7), 0 0 120px rgba(248, 113, 113, 0.4); }
+    }
+
+    .signal-label {
+        font-family: 'Playfair Display', serif;
+        font-size: 28px;
         font-weight: 700;
+        letter-spacing: 1px;
+    }
+
+    .label-real { color: #6ee7b7; }
+    .label-fake { color: #fca5a5; }
+
+    .badge {
+        margin-top: 10px;
+        font-size: 11px;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        color: #666;
+        border: 1px solid #333;
+        padding: 5px 14px;
+        border-radius: 20px;
+    }
+
+    /* Confidence bar */
+    .conf-wrap {
+        width: 260px;
+        margin-top: 18px;
+    }
+
+    .conf-track {
+        width: 100%;
+        height: 6px;
+        background: rgba(255,255,255,0.08);
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    .conf-fill-real {
+        height: 100%;
+        background: linear-gradient(90deg, #10b981, #6ee7b7);
+        border-radius: 10px;
+        animation: fillBar 1.2s ease forwards;
+    }
+
+    .conf-fill-fake {
+        height: 100%;
+        background: linear-gradient(90deg, #ef4444, #fca5a5);
+        border-radius: 10px;
+        animation: fillBar 1.2s ease forwards;
+    }
+
+    @keyframes fillBar {
+        from { width: 0%; }
+    }
+
+    .conf-text {
         text-align: center;
-        margin-top: 25px;
-        animation: popIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-    }
-
-    @keyframes popIn {
-        0% { opacity: 0; transform: scale(0.85); }
-        100% { opacity: 1; transform: scale(1); }
-    }
-
-    .real-card {
-        background: rgba(52, 211, 153, 0.08);
-        color: #6ee7b7;
-        border: 1px solid rgba(52, 211, 153, 0.4);
-        box-shadow: 0 0 25px rgba(52, 211, 153, 0.12);
-    }
-
-    .fake-card {
-        background: rgba(212, 175, 55, 0.08);
-        color: #e8c766;
-        border: 1px solid rgba(212, 175, 55, 0.4);
-        box-shadow: 0 0 25px rgba(212, 175, 55, 0.12);
-    }
-
-    .confidence-text {
-        font-size: 14px;
-        font-weight: 400;
-        opacity: 0.75;
-        margin-top: 6px;
+        margin-top: 10px;
+        font-size: 13px;
+        color: #999;
+        letter-spacing: 0.5px;
     }
 
     section[data-testid="stSidebar"] {
-        background: #0a0a0a;
-        border-right: 1px solid #d4af37;
+        background: #050505;
+        border-right: 1px solid rgba(212, 175, 55, 0.3);
     }
 
     section[data-testid="stSidebar"] * {
@@ -191,7 +265,7 @@ user_input = st.text_area("", placeholder="Paste a news article or headline here
 
 col1, col2, col3 = st.columns([1, 1, 1])
 with col2:
-    check = st.button("Analyze News", use_container_width=True)
+    check = st.button("Verify News", use_container_width=True)
 
 if check:
     if user_input.strip() == "":
@@ -199,7 +273,32 @@ if check:
     else:
         with st.spinner("Analyzing content..."):
             label, confidence = predict_news(user_input)
+
         if label == "REAL":
-            st.markdown(f'<div class="result-card real-card">✅ This looks REAL<div class="confidence-text">Confidence: {confidence}%</div></div>', unsafe_allow_html=True)
+            st.markdown(f"""
+                <div class="signal-wrap">
+                    <div class="orb orb-real"></div>
+                    <div class="signal-label label-real">VERIFIED REAL</div>
+                    <div class="badge">AI Confidence Score</div>
+                    <div class="conf-wrap">
+                        <div class="conf-track">
+                            <div class="conf-fill-real" style="width:{confidence}%;"></div>
+                        </div>
+                        <div class="conf-text">{confidence}% Confidence</div>
+                    </div>
+                </div>
+            """, unsafe_allow_html=True)
         else:
-            st.markdown(f'<div class="result-card fake-card">🚨 This looks FAKE<div class="confidence-text">Confidence: {confidence}%</div></div>', unsafe_allow_html=True)
+            st.markdown(f"""
+                <div class="signal-wrap">
+                    <div class="orb orb-fake"></div>
+                    <div class="signal-label label-fake">FLAGGED FAKE</div>
+                    <div class="badge">AI Confidence Score</div>
+                    <div class="conf-wrap">
+                        <div class="conf-track">
+                            <div class="conf-fill-fake" style="width:{confidence}%;"></div>
+                        </div>
+                        <div class="conf-text">{confidence}% Confidence</div>
+                    </div>
+                </div>
+            """, unsafe_allow_html=True)
