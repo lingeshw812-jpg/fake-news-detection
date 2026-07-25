@@ -460,7 +460,7 @@ st.markdown("""
 st.markdown('<p class="footer-note">Built with NLP + Machine Learning · Final Year Project</p>', unsafe_allow_html=True)
 import requests
 
-NEWS_API_KEY = "YOUR_API_KEY_HERE"  # paste your key from newsapi.org
+NEWS_API_KEY = "6a900bc79d5d4b7caf3490ca397426cf"  # paste your key from newsapi.org
 
 def fetch_live_headlines(country="us", category="general", count=5):
     url = f"https://newsapi.org/v2/top-headlines?country={country}&category={category}&apiKey={NEWS_API_KEY}&pageSize={count}"
