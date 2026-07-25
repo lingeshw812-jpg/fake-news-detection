@@ -12,7 +12,6 @@ nltk.download('omw-1.4')
 stop_words = set(stopwords.words('english'))
 lemmatizer = WordNetLemmatizer()
 
-# Load saved model and vectorizer
 with open('model.pkl', 'rb') as f:
     model = pickle.load(f)
 
@@ -38,85 +37,154 @@ def predict_news(text):
     confidence = round(max(probability) * 100, 2)
     return label, confidence
 
-# --- Streamlit UI ---
 st.set_page_config(page_title="Fake News Detector", page_icon="📰", layout="centered")
 
 st.markdown("""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Inter:wght@400;500&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Manrope:wght@400;500;600&display=swap');
 
     html, body, [class*="css"] {
-        font-family: 'Inter', sans-serif;
+        font-family: 'Manrope', sans-serif;
     }
 
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+
     .stApp {
-        background: linear-gradient(135deg, #f5f7fa 0%, #eef1f5 100%);
+        background: linear-gradient(-45deg, #0f0c29, #302b63, #24243e, #1a1a3d);
+        background-size: 400% 400%;
+        animation: gradientShift 15s ease infinite;
+    }
+
+    @keyframes gradientShift {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
     }
 
     .main-title {
-        font-family: 'Poppins', sans-serif;
-        font-size: 42px;
-        font-weight: 700;
-        background: linear-gradient(90deg, #2563eb, #7c3aed);
+        font-family: 'Sora', sans-serif;
+        font-size: 46px;
+        font-weight: 800;
+        background: linear-gradient(90deg, #a78bfa, #60a5fa, #34d399);
+        background-size: 200% auto;
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         text-align: center;
         margin-bottom: 0px;
+        animation: shine 4s linear infinite;
+    }
+
+    @keyframes shine {
+        to { background-position: 200% center; }
     }
 
     .subtitle {
         text-align: center;
-        color: #6b7280;
+        color: #cbd5e1;
         font-size: 16px;
-        margin-bottom: 30px;
+        margin-bottom: 35px;
+        font-weight: 400;
+        opacity: 0.85;
+    }
+
+    .glass-card {
+        background: rgba(255, 255, 255, 0.06);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 20px;
+        padding: 30px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        animation: fadeInUp 0.8s ease;
+    }
+
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
     }
 
     .stTextArea textarea {
-        border-radius: 12px;
-        border: 1px solid #d1d5db;
-        font-size: 15px;
-        padding: 12px;
+        background: rgba(255, 255, 255, 0.05) !important;
+        border-radius: 14px !important;
+        border: 1px solid rgba(255, 255, 255, 0.15) !important;
+        color: #f1f5f9 !important;
+        font-size: 15px !important;
+        padding: 14px !important;
+    }
+
+    .stTextArea textarea::placeholder {
+        color: #94a3b8 !important;
     }
 
     .stButton>button {
-        background: linear-gradient(90deg, #2563eb, #7c3aed);
+        background: linear-gradient(90deg, #7c3aed, #2563eb);
         color: white;
         border: none;
-        border-radius: 10px;
-        padding: 12px 32px;
+        border-radius: 12px;
+        padding: 14px 36px;
         font-weight: 600;
         font-size: 15px;
-        transition: 0.3s;
-        box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 20px rgba(124, 58, 237, 0.4);
+        letter-spacing: 0.3px;
     }
 
     .stButton>button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
+        transform: translateY(-3px) scale(1.02);
+        box-shadow: 0 8px 30px rgba(124, 58, 237, 0.6);
+    }
+
+    .stButton>button:active {
+        transform: translateY(0px) scale(0.98);
     }
 
     .result-card {
-        padding: 20px;
-        border-radius: 12px;
-        font-size: 18px;
-        font-weight: 600;
+        padding: 28px;
+        border-radius: 18px;
+        font-size: 22px;
+        font-weight: 700;
         text-align: center;
-        margin-top: 20px;
+        margin-top: 25px;
+        animation: popIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        backdrop-filter: blur(10px);
+    }
+
+    @keyframes popIn {
+        0% { opacity: 0; transform: scale(0.8); }
+        100% { opacity: 1; transform: scale(1); }
     }
 
     .real-card {
-        background: #d1fae5;
-        color: #065f46;
-        border: 1px solid #34d399;
+        background: rgba(52, 211, 153, 0.12);
+        color: #6ee7b7;
+        border: 1px solid rgba(52, 211, 153, 0.4);
+        box-shadow: 0 0 30px rgba(52, 211, 153, 0.15);
     }
 
     .fake-card {
-        background: #fee2e2;
-        color: #991b1b;
-        border: 1px solid #f87171;
+        background: rgba(248, 113, 113, 0.12);
+        color: #fca5a5;
+        border: 1px solid rgba(248, 113, 113, 0.4);
+        box-shadow: 0 0 30px rgba(248, 113, 113, 0.15);
     }
 
-    footer {visibility: hidden;}
+    .confidence-text {
+        font-size: 14px;
+        font-weight: 400;
+        opacity: 0.75;
+        margin-top: 6px;
+    }
+
+    section[data-testid="stSidebar"] {
+        background: rgba(15, 12, 41, 0.95);
+        backdrop-filter: blur(10px);
+    }
+
+    section[data-testid="stSidebar"] * {
+        color: #e2e8f0 !important;
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -130,6 +198,8 @@ with st.sidebar:
 st.markdown('<p class="main-title">📰 Fake News Detector</p>', unsafe_allow_html=True)
 st.markdown('<p class="subtitle">AI-powered NLP system to detect misinformation in news articles</p>', unsafe_allow_html=True)
 
+st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+
 user_input = st.text_area("", placeholder="Paste a news article or headline here...", height=200)
 
 col1, col2, col3 = st.columns([1, 1, 1])
@@ -140,8 +210,11 @@ if check:
     if user_input.strip() == "":
         st.warning("Please enter some text first.")
     else:
-        label, confidence = predict_news(user_input)
+        with st.spinner("Analyzing content..."):
+            label, confidence = predict_news(user_input)
         if label == "REAL":
-            st.markdown(f'<div class="result-card real-card">✅ This looks REAL<br><span style="font-size:14px;font-weight:400;">Confidence: {confidence}%</span></div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="result-card real-card">✅ This looks REAL<div class="confidence-text">Confidence: {confidence}%</div></div>', unsafe_allow_html=True)
         else:
-            st.markdown(f'<div class="result-card fake-card">🚨 This looks FAKE<br><span style="font-size:14px;font-weight:400;">Confidence: {confidence}%</span></div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="result-card fake-card">🚨 This looks FAKE<div class="confidence-text">Confidence: {confidence}%</div></div>', unsafe_allow_html=True)
+
+st.markdown('</div>', unsafe_allow_html=True)
