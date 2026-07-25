@@ -41,7 +41,7 @@ st.set_page_config(page_title="Fake News Detector", page_icon="📰", layout="ce
 
 st.markdown("""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Manrope:wght@400;500;600&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Manrope:wght@400;500;600&display=swap');
 
     html, body, [class*="css"] {
         font-family: 'Manrope', sans-serif;
@@ -52,28 +52,21 @@ st.markdown("""
     header {visibility: hidden;}
 
     .stApp {
-        background: linear-gradient(-45deg, #0f0c29, #302b63, #24243e, #1a1a3d);
-        background-size: 400% 400%;
-        animation: gradientShift 15s ease infinite;
-    }
-
-    @keyframes gradientShift {
-        0% { background-position: 0% 50%; }
-        50% { background-position: 100% 50%; }
-        100% { background-position: 0% 50%; }
+        background: radial-gradient(circle at top, #1a1a1a 0%, #000000 70%);
     }
 
     .main-title {
-        font-family: 'Sora', sans-serif;
-        font-size: 46px;
+        font-family: 'Playfair Display', serif;
+        font-size: 50px;
         font-weight: 800;
-        background: linear-gradient(90deg, #a78bfa, #60a5fa, #34d399);
+        background: linear-gradient(90deg, #d4af37, #f4e5c2, #d4af37);
         background-size: 200% auto;
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         text-align: center;
-        margin-bottom: 0px;
-        animation: shine 4s linear infinite;
+        margin-bottom: 4px;
+        animation: shine 5s linear infinite;
+        letter-spacing: 0.5px;
     }
 
     @keyframes shine {
@@ -82,58 +75,51 @@ st.markdown("""
 
     .subtitle {
         text-align: center;
-        color: #cbd5e1;
-        font-size: 16px;
-        margin-bottom: 35px;
+        color: #a8a8a8;
+        font-size: 15px;
+        margin-bottom: 40px;
         font-weight: 400;
-        opacity: 0.85;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
     }
 
-    .glass-card {
-        background: rgba(255, 255, 255, 0.06);
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        border-radius: 20px;
-        padding: 30px;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-        animation: fadeInUp 0.8s ease;
-    }
-
-    @keyframes fadeInUp {
-        from { opacity: 0; transform: translateY(20px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-
-    .stTextArea textarea {
-        background: rgba(255, 255, 255, 0.05) !important;
+    div[data-testid="stTextArea"] textarea {
+        background-color: #141414 !important;
         border-radius: 14px !important;
-        border: 1px solid rgba(255, 255, 255, 0.15) !important;
-        color: #f1f5f9 !important;
+        border: 1px solid #d4af37 !important;
+        color: #f5f5f5 !important;
         font-size: 15px !important;
-        padding: 14px !important;
+        padding: 16px !important;
+        caret-color: #d4af37 !important;
     }
 
-    .stTextArea textarea::placeholder {
-        color: #94a3b8 !important;
+    div[data-testid="stTextArea"] textarea::placeholder {
+        color: #777777 !important;
+    }
+
+    div[data-testid="stTextArea"] textarea:focus {
+        border: 1px solid #f4e5c2 !important;
+        box-shadow: 0 0 15px rgba(212, 175, 55, 0.3) !important;
     }
 
     .stButton>button {
-        background: linear-gradient(90deg, #7c3aed, #2563eb);
-        color: white;
+        background: linear-gradient(90deg, #b8860b, #d4af37, #b8860b);
+        background-size: 200% auto;
+        color: #0a0a0a;
         border: none;
         border-radius: 12px;
         padding: 14px 36px;
-        font-weight: 600;
+        font-weight: 700;
         font-size: 15px;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 20px rgba(124, 58, 237, 0.4);
-        letter-spacing: 0.3px;
+        transition: all 0.4s ease;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
     }
 
     .stButton>button:hover {
-        transform: translateY(-3px) scale(1.02);
-        box-shadow: 0 8px 30px rgba(124, 58, 237, 0.6);
+        background-position: right center;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(212, 175, 55, 0.4);
     }
 
     .stButton>button:active {
@@ -142,32 +128,31 @@ st.markdown("""
 
     .result-card {
         padding: 28px;
-        border-radius: 18px;
+        border-radius: 16px;
         font-size: 22px;
         font-weight: 700;
         text-align: center;
         margin-top: 25px;
         animation: popIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-        backdrop-filter: blur(10px);
     }
 
     @keyframes popIn {
-        0% { opacity: 0; transform: scale(0.8); }
+        0% { opacity: 0; transform: scale(0.85); }
         100% { opacity: 1; transform: scale(1); }
     }
 
     .real-card {
-        background: rgba(52, 211, 153, 0.12);
+        background: rgba(52, 211, 153, 0.08);
         color: #6ee7b7;
         border: 1px solid rgba(52, 211, 153, 0.4);
-        box-shadow: 0 0 30px rgba(52, 211, 153, 0.15);
+        box-shadow: 0 0 25px rgba(52, 211, 153, 0.12);
     }
 
     .fake-card {
-        background: rgba(248, 113, 113, 0.12);
-        color: #fca5a5;
-        border: 1px solid rgba(248, 113, 113, 0.4);
-        box-shadow: 0 0 30px rgba(248, 113, 113, 0.15);
+        background: rgba(212, 175, 55, 0.08);
+        color: #e8c766;
+        border: 1px solid rgba(212, 175, 55, 0.4);
+        box-shadow: 0 0 25px rgba(212, 175, 55, 0.12);
     }
 
     .confidence-text {
@@ -178,12 +163,16 @@ st.markdown("""
     }
 
     section[data-testid="stSidebar"] {
-        background: rgba(15, 12, 41, 0.95);
-        backdrop-filter: blur(10px);
+        background: #0a0a0a;
+        border-right: 1px solid #d4af37;
     }
 
     section[data-testid="stSidebar"] * {
-        color: #e2e8f0 !important;
+        color: #e5e5e5 !important;
+    }
+
+    div[data-testid="stMetricValue"] {
+        color: #d4af37 !important;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -195,16 +184,14 @@ with st.sidebar:
     st.markdown("---")
     st.caption("Built as a final year project")
 
-st.markdown('<p class="main-title">📰 Fake News Detector</p>', unsafe_allow_html=True)
-st.markdown('<p class="subtitle">AI-powered NLP system to detect misinformation in news articles</p>', unsafe_allow_html=True)
-
-st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+st.markdown('<p class="main-title">📰 The News Verifier</p>', unsafe_allow_html=True)
+st.markdown('<p class="subtitle">AI-Powered Detection of Misinformation</p>', unsafe_allow_html=True)
 
 user_input = st.text_area("", placeholder="Paste a news article or headline here...", height=200)
 
 col1, col2, col3 = st.columns([1, 1, 1])
 with col2:
-    check = st.button("🔍 Analyze News", use_container_width=True)
+    check = st.button("Analyze News", use_container_width=True)
 
 if check:
     if user_input.strip() == "":
@@ -216,5 +203,3 @@ if check:
             st.markdown(f'<div class="result-card real-card">✅ This looks REAL<div class="confidence-text">Confidence: {confidence}%</div></div>', unsafe_allow_html=True)
         else:
             st.markdown(f'<div class="result-card fake-card">🚨 This looks FAKE<div class="confidence-text">Confidence: {confidence}%</div></div>', unsafe_allow_html=True)
-
-st.markdown('</div>', unsafe_allow_html=True)
