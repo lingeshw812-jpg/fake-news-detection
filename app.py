@@ -2,6 +2,7 @@ import streamlit as st
 import pickle
 import re
 import nltk
+import requests
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 from datetime import datetime
@@ -44,6 +45,25 @@ def predict_news(text):
     return label, confidence
 
 
+NEWS_API_KEY = "6a900bc79d5d4b7caf3490ca397426cf"
+
+def fetch_live_headlines(country="us", category="general", count=5):
+    url = f"https://newsapi.org/v2/top-headlines?country={country}&category={category}&apiKey={NEWS_API_KEY}&pageSize={count}"
+    response = requests.get(url)
+    if response.status_code == 200:
+        data = response.json()
+        articles = data.get("articles", [])
+        return [
+            {
+                "title": a.get("title", ""),
+                "description": a.get("description", "") or "",
+                "source": a.get("source", {}).get("name", "Unknown")
+            }
+            for a in articles
+        ]
+    return []
+
+
 # ----------------------------
 # Page Config
 # ----------------------------
@@ -55,29 +75,12 @@ st.set_page_config(page_title="The News Verifier", page_icon="🛡️", layout="
 if "history" not in st.session_state:
     st.session_state.history = []
 
-if "text_input_value" not in st.session_state:
-    st.session_state.text_input_value = ""
-
-SAMPLE_REAL = ("WASHINGTON (Reuters) - The Federal Reserve announced on Wednesday that it "
-               "would raise interest rates by a quarter point, citing continued strength "
-               "in the labor market and persistent inflation pressures. The decision was "
-               "widely expected by economists.")
-
-SAMPLE_FAKE = ("You won't BELIEVE what this celebrity said about the government! Shocking "
-               "video reveals secret conspiracy that mainstream media doesn't want you to "
-               "see. Share before it gets deleted!")
-
-
-def fill_real():
-    st.session_state.text_input_value = SAMPLE_REAL
-
-
-def fill_fake():
-    st.session_state.text_input_value = SAMPLE_FAKE
+if "main_textarea" not in st.session_state:
+    st.session_state.main_textarea = ""
 
 
 def clear_input():
-    st.session_state.text_input_value = ""
+    st.session_state.main_textarea = ""
 
 
 # ----------------------------
@@ -157,7 +160,6 @@ st.markdown("""
 
     .icon-item span.emoji { font-size: 22px; margin-bottom: 6px; }
 
-    /* ---- TEXTAREA FIX (high specificity + !important) ---- */
     .stApp textarea,
     .stApp div[data-testid="stTextArea"] textarea,
     .stApp div[data-baseweb="textarea"] textarea {
@@ -209,8 +211,8 @@ st.markdown("""
         border: 1px solid rgba(167,139,250,0.4) !important;
         color: #c4b5fd !important;
         box-shadow: none !important;
-        font-size: 12px !important;
-        padding: 8px 16px !important;
+        font-size: 13px !important;
+        padding: 10px 20px !important;
     }
 
     .signal-wrap {
@@ -362,30 +364,18 @@ st.markdown("""
 # ----------------------------
 user_input = st.text_area(
     "",
-    value=st.session_state.text_input_value,
     placeholder="Paste a news article or headline here...",
     height=200,
     key="main_textarea"
 )
 
-col1, col2, col3, col4, col5 = st.columns([1, 1, 1, 1, 1])
-with col2:
-    st.markdown('<div class="ghost-btn">', unsafe_allow_html=True)
-    st.button("Try Real Example", on_click=fill_real, use_container_width=True)
-    st.markdown('</div>', unsafe_allow_html=True)
-with col3:
-    st.markdown('<div class="ghost-btn">', unsafe_allow_html=True)
-    st.button("Try Fake Example", on_click=fill_fake, use_container_width=True)
-    st.markdown('</div>', unsafe_allow_html=True)
-with col4:
+colA, colB, colC, colD = st.columns([1, 1, 1, 1])
+with colB:
+    check = st.button("Verify News", use_container_width=True)
+with colC:
     st.markdown('<div class="ghost-btn">', unsafe_allow_html=True)
     st.button("Clear", on_click=clear_input, use_container_width=True)
     st.markdown('</div>', unsafe_allow_html=True)
-
-st.write("")
-colA, colB, colC = st.columns([1, 1, 1])
-with colB:
-    check = st.button("Verify News", use_container_width=True)
 
 # ----------------------------
 # Prediction + Result Display
@@ -431,6 +421,29 @@ if check:
             """, unsafe_allow_html=True)
 
 # ----------------------------
+# Live Headlines Check
+# ----------------------------
+st.markdown('<p class="section-title">Check Live Headlines</p>', unsafe_allow_html=True)
+
+if st.button("📡 Fetch Latest Real News", use_container_width=True):
+    with st.spinner("Fetching live headlines..."):
+        headlines = fetch_live_headlines()
+
+    if headlines:
+        for h in headlines:
+            combined_text = h["title"] + " " + h["description"]
+            hl_label, hl_confidence = predict_news(combined_text)
+            tag_class = "history-tag-real" if hl_label == "REAL" else "history-tag-fake"
+            st.markdown(f"""
+                <div class="history-item">
+                    <span>{h['title']} <br><small style="color:#888;">Source: {h['source']}</small></span>
+                    <span class="{tag_class}">{hl_label} · {hl_confidence}%</span>
+                </div>
+            """, unsafe_allow_html=True)
+    else:
+        st.warning("Could not fetch live news. Check your API key or try again.")
+
+# ----------------------------
 # Recent Checks History
 # ----------------------------
 if st.session_state.history:
@@ -458,97 +471,3 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 st.markdown('<p class="footer-note">Built with NLP + Machine Learning · Final Year Project</p>', unsafe_allow_html=True)
-import requests
-
-NEWS_API_KEY = "6a900bc79d5d4b7caf3490ca397426cf"  # paste your key from newsapi.org
-
-def fetch_live_headlines(country="us", category="general", count=5):
-    url = f"https://newsapi.org/v2/top-headlines?country={country}&category={category}&apiKey={NEWS_API_KEY}&pageSize={count}"
-    response = requests.get(url)
-    if response.status_code == 200:
-        data = response.json()
-        articles = data.get("articles", [])
-        return [
-            {
-                "title": a.get("title", ""),
-                "description": a.get("description", "") or "",
-                "source": a.get("source", {}).get("name", "Unknown")
-            }
-            for a in articles
-        ]
-    return []
-    st.markdown('<p class="section-title">Check Live Headlines</p>', unsafe_allow_html=True)
-
-if st.button("📡 Fetch Latest Real News", use_container_width=True):
-    with st.spinner("Fetching live headlines..."):
-        headlines = fetch_live_headlines()
-
-    if headlines:
-        for h in headlines:
-            combined_text = h["title"] + " " + h["description"]
-            label, confidence = predict_news(combined_text)
-            tag_class = "history-tag-real" if label == "REAL" else "history-tag-fake"
-            st.markdown(f"""
-                <div class="history-item">
-                    <span>{h['title']} <br><small style="color:#888;">Source: {h['source']}</small></span>
-                    <span class="{tag_class}">{label} · {confidence}%</span>
-                </div>
-SAMPLE_REAL = (...)
-SAMPLE_FAKE = (...)
-import random
-
-SAMPLE_REAL_LIST = [
-    "WASHINGTON (Reuters) - The Federal Reserve announced it would raise interest rates by a quarter point, citing continued strength in the labor market.",
-    "NEW YORK (Reuters) - U.S. stocks closed higher on Thursday as investors reacted positively to quarterly earnings reports from major technology companies.",
-    "LONDON (Reuters) - Britain's government said it would introduce new legislation aimed at strengthening data privacy protections for consumers.",
-    "WASHINGTON (Reuters) - The White House said the president would meet with congressional leaders next week to discuss upcoming budget negotiations.",
-    "GENEVA (Reuters) - The World Health Organization announced updated guidelines for seasonal vaccination campaigns following expert committee review.",
-    "BEIJING (Reuters) - China's manufacturing activity expanded for a third consecutive month, according to official data released on Monday.",
-    "PARIS (Reuters) - French lawmakers approved a new climate bill aimed at reducing carbon emissions by 40 percent before the next decade.",
-    "TOKYO (Reuters) - Japan's central bank held interest rates steady, citing the need for more data on inflation trends before further action.",
-    "BERLIN (Reuters) - Germany's economy ministry reported a slight increase in industrial production, beating analyst expectations for the quarter.",
-    "NEW DELHI (Reuters) - India's parliament passed a new infrastructure spending bill intended to boost rural connectivity over the next five years.",
-    "OTTAWA (Reuters) - Canada's finance minister unveiled a new budget proposal focused on affordable housing and small business tax relief.",
-    "MOSCOW (Reuters) - Russia's central bank kept its key interest rate unchanged, citing stable inflation figures for the third straight month.",
-    "SEOUL (Reuters) - South Korea's exports rose for the second consecutive month, driven largely by strong semiconductor demand.",
-    "CANBERRA (Reuters) - Australia's government announced new funding for renewable energy projects as part of its long-term climate strategy.",
-    "ROME (Reuters) - Italy's parliament debated a new labor reform bill aimed at reducing youth unemployment across the country.",
-    "MADRID (Reuters) - Spain's tourism sector reported record visitor numbers this quarter, according to the national statistics agency.",
-    "SINGAPORE (Reuters) - Singapore's trade ministry said exports grew steadily, supported by demand from regional markets.",
-    "DUBLIN (Reuters) - Ireland's central bank raised its economic growth forecast, citing stronger-than-expected consumer spending.",
-    "OSLO (Reuters) - Norway's government proposed new offshore wind energy investments as part of its 2030 climate targets.",
-    "WELLINGTON (Reuters) - New Zealand's central bank held interest rates steady, noting balanced risks to the economic outlook."
-]
-
-SAMPLE_FAKE_LIST = [
-    "You won't BELIEVE what this celebrity said about the government! Shocking video reveals secret conspiracy mainstream media won't show you!",
-    "SHOCKING: Leaked documents reveal government secretly controlling weather patterns to cause disasters! Share before they delete this!",
-    "BREAKING: Doctors HATE this one trick that cures everything! Big Pharma doesn't want you to know the truth!",
-    "Scientists confirm the earth is actually flat! Government hiding the truth for decades, whistleblower reveals all!",
-    "This miracle fruit melts fat overnight! Doctors are FURIOUS this simple trick isn't taught in medical school!",
-    "EXPOSED: Secret alien base found under mountain, government cover-up confirmed by anonymous insider!",
-    "You won't believe what happens when you mix these two household items! Big companies don't want you to know!",
-    "URGENT: New law will BAN this common food next month! Share this before it's too late to stock up!",
-    "Leaked footage shows world leaders secretly meeting to plan population control, insider blows whistle!",
-    "This one weird trick can make you rich overnight! Banks HATE this simple method, click to learn more!",
-    "BOMBSHELL: Secret cure for all diseases found in your kitchen, pharmaceutical companies are terrified!",
-    "You won't believe which country is secretly building a time machine! Leaked photos go viral online!",
-    "SHOCKING truth about your smartphone revealed! Manufacturers don't want this information getting out!",
-    "This billionaire's secret morning routine will change your life forever, experts are stunned!",
-    "Government caught hiding evidence of ancient civilization, mainstream historians refuse to comment!",
-    "BREAKING: Common vegetable found to reverse aging instantly, scientists baffled by results!",
-    "Leaked audio reveals shocking truth about your favorite brand, company scrambles to respond!",
-    "You won't believe what's really inside processed food, this video will change how you eat forever!",
-    "URGENT WARNING: This everyday app is secretly spying on you, delete it before it's too late!",
-    "Insider reveals the shocking secret behind lottery wins, officials refuse to confirm or deny!"
-]
-
-def fill_real():
-    st.session_state.text_input_value = random.choice(SAMPLE_REAL_LIST)
-
-def fill_fake():
-    st.session_state.text_input_value = random.choice(SAMPLE_FAKE_LIST)
-            """, unsafe_allow_html=True)
-    else:
-        st.warning("Could not fetch live news. Check your API key or try again.")
-        
